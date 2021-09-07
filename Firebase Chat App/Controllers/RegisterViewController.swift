@@ -14,11 +14,8 @@ class RegisterViewController: UIViewController {
         let logoImageView = UIImageView()
         logoImageView.contentMode = .scaleAspectFit
         logoImageView.translatesAutoresizingMaskIntoConstraints = false
-        logoImageView.image = UIImage(systemName: "person")
-        logoImageView.layer.masksToBounds = true
-        logoImageView.layer.borderWidth = 2
-        logoImageView.layer.borderColor = UIColor.lightGray.cgColor
-        
+        logoImageView.image = UIImage(systemName: "person.circle")
+        logoImageView.tintColor = .gray
         return logoImageView
     }()
     
@@ -167,10 +164,7 @@ class RegisterViewController: UIViewController {
         logoImageView.addGestureRecognizer(gesture)
         
     }
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        logoImageView.layer.cornerRadius = logoImageView.frame.size.width / 3.0
-    }
+   
     //MARK:- didTapRegisterButton
 
     @objc private func didTapRegisterButton(){
@@ -188,26 +182,41 @@ class RegisterViewController: UIViewController {
             
             return
         }
-        //Register in firebase
-        FirebaseAuth.Auth.auth().createUser(withEmail: mail, password: password, completion: { authResult, error in
-            guard let result = authResult, error == nil else {
-                let alert = UIAlertController(title: "Woops",
-                                              message: "Error creating account",
-                                              preferredStyle: .alert)
-                alert.addAction(UIAlertAction(title: "Dismiss",
-                                              style: .cancel,
-                                              handler: nil))
+        DatabaseManager.shared.userExists(with: mail, completion: { [weak self]exists in
+            guard let strongSelf = self else {
                 return
             }
-            let user = result.user
-            print("Created User\(user)")
+            guard !exists else {
+                //user already exists
+                strongSelf.alertUserLoginError(message: "Looks like user account for thath email addres already exists")
+                return
+            }
+            //Register in firebase
+            FirebaseAuth.Auth.auth().createUser(withEmail: mail, password: password, completion: { [weak self] authResult, error in
+                guard let strongSelf = self else {
+                     
+                    return
+                }
+                guard authResult != nil, error == nil else {
+                    let alert = UIAlertController(title: "Woops",
+                                                  message: "Error creating account",
+                                                  preferredStyle: .alert)
+                    alert.addAction(UIAlertAction(title: "Dismiss",
+                                                  style: .cancel,
+                                                  handler: nil))
+                    return
+                }
+                DatabaseManager.shared.insertUser(with: ChatAppUser(firstName: firstName, lastName: lasttNameField, mail: mail))
+                strongSelf.navigationController?.dismiss(animated: true, completion: nil)
+            })
         })
+        
 
     }
     //MARK:- alertUserLoginError
-    func alertUserLoginError(){
+    func alertUserLoginError(message:String = "Please enter all information to create new account"){
         let alert = UIAlertController(title: "Woops",
-                                      message: "Please enter all information to create new account",
+                                      message: message,
                                       preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "Dismiss",
                                       style: .cancel,
