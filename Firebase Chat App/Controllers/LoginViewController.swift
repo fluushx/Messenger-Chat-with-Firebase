@@ -7,6 +7,7 @@
 
 import UIKit
 import FirebaseAuth
+import FBSDKLoginKit
 class LoginViewController: UIViewController {
     
     private let logoImageView: UIImageView = {
@@ -41,6 +42,7 @@ class LoginViewController: UIViewController {
         mailTextField.autocorrectionType = .no
         return mailTextField
     }()
+    
     //MARK: passwordTextField
     private let passwordTextField : UITextField = {
        let passwordTextField = UITextField()
@@ -88,6 +90,20 @@ class LoginViewController: UIViewController {
         loginButton.addTarget(self, action: #selector(didTapLoginButton), for: .touchUpInside)
         return loginButton
     }()
+    private let facebokButton : FBLoginButton = {
+        let facebokButton = FBLoginButton()
+        facebokButton.layer.cornerRadius = 12
+        facebokButton.layer.cornerRadius = 12
+        facebokButton.layer.shadowColor = UIColor.lightGray.cgColor
+        facebokButton.layer.shadowOffset = CGSize(width:3, height:3)
+        facebokButton.layer.shadowOpacity = 3
+        facebokButton.layer.shadowRadius = 3
+        facebokButton.layer.borderColor = UIColor.black.cgColor
+        facebokButton.addTarget(self, action: #selector(didTapButtonGoogle), for: .touchUpInside)
+        facebokButton.translatesAutoresizingMaskIntoConstraints = false
+        return facebokButton
+    }()
+  
     
     //MARK: containerView
     private let containerView : UIView = {
@@ -119,6 +135,10 @@ class LoginViewController: UIViewController {
         let gesture = UITapGestureRecognizer(target: self,
                                              action: #selector(didTapChangeProfilePic))
         logoImageView.addGestureRecognizer(gesture)
+        
+       
+         
+
     }
      
     @objc func didTapRegisterButton(){
@@ -156,8 +176,14 @@ class LoginViewController: UIViewController {
             let user = result.user
             print(" Log in User: \(user)")
             strongSelf.navigationController?.dismiss(animated: true, completion: nil)
+         
+         
+            
         })
 
+    }
+    @objc private func didTapButtonGoogle(){
+        
     }
     @objc private func didTapChangeProfilePic(){
         print("tap")
@@ -186,6 +212,7 @@ class LoginViewController: UIViewController {
         containerView.addSubview(mailTextField)
         containerView.addSubview(passwordTextField)
         view.addSubview(loginButton)
+        view.addSubview(facebokButton)
          
     }
     func setUpConstraints(){
@@ -219,6 +246,11 @@ class LoginViewController: UIViewController {
         loginButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 30).isActive = true
         loginButton.heightAnchor.constraint(equalToConstant: 50).isActive = true
         loginButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20).isActive = true
+        
+        //MARK:- facebookButton
+        facebokButton.topAnchor.constraint(equalTo: loginButton.bottomAnchor, constant: 10).isActive = true
+        facebokButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 30).isActive = true
+        facebokButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20).isActive = true
     }
 }
 extension LoginViewController : UITextFieldDelegate {

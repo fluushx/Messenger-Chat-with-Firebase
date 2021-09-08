@@ -179,7 +179,6 @@ class RegisterViewController: UIViewController {
               !firstName.isEmpty, !lasttNameField.isEmpty,
               !mail.isEmpty, !password.isEmpty, password.count >= 6 else {
             alertUserLoginError()
-            
             return
         }
         DatabaseManager.shared.userExists(with: mail, completion: { [weak self]exists in

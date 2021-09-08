@@ -6,24 +6,73 @@
 //
 
 import UIKit
-
-class ProfileViewController: UIViewController {
-
+import FirebaseAuth
+class ProfileViewController: UIViewController,UITableViewDelegate,UITableViewDataSource {
+    
+    let data = ["Log Out"]
+    private let tableView: UITableView = {
+        let tableView = UITableView()
+        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
+        tableView.translatesAutoresizingMaskIntoConstraints = false
+        return tableView
+    }()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        // Do any additional setup after loading the view.
+        view.addSubview(tableView)
+        setUpTableView()
+        tableView.delegate = self
+        tableView.dataSource = self
     }
     
-
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
+    func setUpTableView(){
+        tableView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
     }
-    */
-
+}
+extension ProfileViewController {
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return data.count
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "cell",for: indexPath)
+        cell.textLabel?.text = data[indexPath.row]
+        cell.textLabel?.textAlignment = .center
+        cell.textLabel?.textColor = .red
+        return cell
+    }
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        
+        let actionSheet = UIAlertController(title: "Are you sure?",
+                                      message: "Log out",
+                                      preferredStyle: .alert)
+        actionSheet.addAction(UIAlertAction(title: "Log Out",
+                                      style: .destructive,
+                                      handler: { [weak self] _ in
+                                        guard let strongSelf = self else {
+                                            return
+                                        }
+                                        do {
+                                            try FirebaseAuth.Auth.auth().signOut()
+                                            let vc = LoginViewController()
+                                            let nav = UINavigationController(rootViewController: vc)
+                                            nav.modalPresentationStyle = .fullScreen
+                                            strongSelf.present(nav, animated: false)
+                                        }
+                                        catch {
+                                            print("Failed to Log out")
+                                        }
+                                        
+                                      }))
+        actionSheet.addAction(UIAlertAction(title: "Cancel",
+                                            style: .cancel,
+                                            handler: nil))
+        present(actionSheet, animated: true)
+         
+    }
+    
 }
