@@ -8,11 +8,13 @@ target 'Firebase Chat App' do
   # Pods for Firebase Chat App
 pod 'Firebase/Core' 
 pod 'Firebase/Auth'
-pod 'Firebase/Database'    
+pod 'Firebase/Database'
+pod 'Firebase/Storage'
 pod 'FBSDKLoginKit'
 pod 'GoogleSignIn'
 pod 'JGProgressHUD'
 pod 'RealmSwift'
 pod 'SDWebImage'
 pod 'MessageKit'
+ 
 end

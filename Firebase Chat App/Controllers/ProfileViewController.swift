@@ -25,6 +25,68 @@ class ProfileViewController: UIViewController,UITableViewDelegate,UITableViewDat
         setUpTableView()
         tableView.delegate = self
         tableView.dataSource = self
+        tableView.tableHeaderView = createTableHeader()
+    }
+    func createTableHeader()->UIView{
+        
+        let headerView : UIView = {
+            let headerView = UIView()
+            headerView.backgroundColor = UIColor(red: 51/255.0, green: 138/255.0, blue: 255/255.0, alpha: 1.0)
+            headerView.translatesAutoresizingMaskIntoConstraints = false
+            headerView.frame = CGRect(x: 0, y: 0, width: view.frame.size.width, height: 200)
+            headerView.layer.borderColor = UIColor.white.cgColor
+            headerView.layer.borderWidth =  3
+            headerView.layer.masksToBounds = true
+            
+            return headerView
+        }()
+        
+        let imageView: UIImageView = {
+           let imageView = UIImageView()
+            imageView.contentMode = .scaleAspectFill
+            imageView.layer.masksToBounds = true
+            imageView.layer.cornerRadius = 75
+            imageView.layer.borderColor = UIColor.white.cgColor
+            imageView.layer.borderWidth =  3
+            imageView.frame = CGRect(x: (headerView.frame.width - 150) / 2,
+                                     y: 20,
+                                     width: 150,
+                                     height: 150)
+            imageView.backgroundColor = .white
+            return imageView
+        }()
+        
+        headerView.addSubview(imageView)
+        
+        let email = UserDefaults.standard.value(forKey: "email") as? String
+        let safeEmail = DatabaseManager.safeEmail(emailAddress: email!)
+        let fileName = safeEmail + "_profile_picture.png"
+        let path = "images"+fileName
+        print(path)
+        
+        
+        storageManager.shared.downloadURL(for: path, completion: { [weak self] result in
+            switch result{
+            case .success(let url):
+                self?.downloadImage(imageView: imageView, url: url)
+            case .failure(let error):
+                print("failed to get download url: \(error)")
+            }
+            
+        })
+        return headerView
+    }
+    
+    func downloadImage(imageView: UIImageView, url: URL){
+        URLSession.shared.dataTask(with: url, completionHandler: { data, _ , error in
+            guard let data = data, error == nil else {
+                return
+            }
+            DispatchQueue.main.async {
+                let image = UIImage(data: data)
+                imageView.image = image
+            }
+        }).resume()
     }
     
     func setUpTableView(){
@@ -33,6 +95,7 @@ class ProfileViewController: UIViewController,UITableViewDelegate,UITableViewDat
         tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
     }
+     
 }
 extension ProfileViewController {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
