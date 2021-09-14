@@ -21,6 +21,7 @@
 		8799759A26E685FA0069C9F1 /* NewConversationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8799759926E685FA0069C9F1 /* NewConversationViewController.swift */; };
 		8799759C26E6860E0069C9F1 /* ProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8799759B26E6860E0069C9F1 /* ProfileViewController.swift */; };
 		87E50EA626E7C1B2003A798C /* DatabaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87E50EA526E7C1B2003A798C /* DatabaseManager.swift */; };
+		87E9ED3126EA6FA6006648E0 /* ChatViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87E9ED3026EA6FA6006648E0 /* ChatViewController.swift */; };
 		D7C1760E791F960F10DD0307 /* Pods_Firebase_Chat_App.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4110F81D9111EF3DDEE1404F /* Pods_Firebase_Chat_App.framework */; };
 /* End PBXBuildFile section */
 
@@ -42,6 +43,7 @@
 		8799759926E685FA0069C9F1 /* NewConversationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewConversationViewController.swift; sourceTree = "<group>"; };
 		8799759B26E6860E0069C9F1 /* ProfileViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewController.swift; sourceTree = "<group>"; };
 		87E50EA526E7C1B2003A798C /* DatabaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseManager.swift; sourceTree = "<group>"; };
+		87E9ED3026EA6FA6006648E0 /* ChatViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewController.swift; sourceTree = "<group>"; };
 		9D456F9ED4F0A6DA7E80E0E1 /* Pods-Firebase Chat App.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Firebase Chat App.debug.xcconfig"; path = "Target Support Files/Pods-Firebase Chat App/Pods-Firebase Chat App.debug.xcconfig"; sourceTree = "<group>"; };
 		A9D5533C64320A60B9A5A4F4 /* Pods-Firebase Chat App.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Firebase Chat App.release.xcconfig"; path = "Target Support Files/Pods-Firebase Chat App/Pods-Firebase Chat App.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -124,6 +126,7 @@
 				8799759726E685D40069C9F1 /* VideoPlayerViewController.swift */,
 				8799759926E685FA0069C9F1 /* NewConversationViewController.swift */,
 				8799759B26E6860E0069C9F1 /* ProfileViewController.swift */,
+				87E9ED3026EA6FA6006648E0 /* ChatViewController.swift */,
 			);
 			path = Controllers;
 			sourceTree = "<group>";
@@ -288,6 +291,7 @@
 			files = (
 				8799759226E6856C0069C9F1 /* LoginViewController.swift in Sources */,
 				8799759426E6857F0069C9F1 /* RegisterViewController.swift in Sources */,
+				87E9ED3126EA6FA6006648E0 /* ChatViewController.swift in Sources */,
 				87E50EA626E7C1B2003A798C /* DatabaseManager.swift in Sources */,
 				8799759A26E685FA0069C9F1 /* NewConversationViewController.swift in Sources */,
 				8799757B26E682950069C9F1 /* ConversationsViewController.swift in Sources */,

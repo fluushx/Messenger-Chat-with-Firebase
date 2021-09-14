@@ -8,7 +8,16 @@
 import UIKit
 import FirebaseAuth
 import FBSDKLoginKit
+import GoogleSignIn
+import Firebase
+import JGProgressHUD
+
 class LoginViewController: UIViewController {
+    
+    private let signInConfig = GIDConfiguration.init(clientID: "615508120088-b20etkckkp7above483ajrj854eo629i.apps.googleusercontent.com")
+    
+   
+    private let spinner = JGProgressHUD(style: .dark)
     
     private let logoImageView: UIImageView = {
         let logoImageView = UIImageView()
@@ -99,7 +108,8 @@ class LoginViewController: UIViewController {
         facebokButton.layer.shadowOpacity = 3
         facebokButton.layer.shadowRadius = 3
         facebokButton.layer.borderColor = UIColor.black.cgColor
-        facebokButton.addTarget(self, action: #selector(didTapButtonGoogle), for: .touchUpInside)
+        facebokButton.addTarget(self, action: #selector(didTapButtonFB), for: .touchUpInside)
+        facebokButton.permissions = ["email","public_profile"]
         facebokButton.translatesAutoresizingMaskIntoConstraints = false
         return facebokButton
     }()
@@ -121,6 +131,22 @@ class LoginViewController: UIViewController {
         return containerView
     }()
     
+    //MARK: containerGoogleLogin
+    private let googleButton : GIDSignInButton = {
+        let googleButton = GIDSignInButton()
+        googleButton.translatesAutoresizingMaskIntoConstraints = false
+        googleButton.layer.cornerRadius = 12
+        googleButton.layer.cornerRadius = 12
+        googleButton.layer.shadowColor = UIColor.lightGray.cgColor
+        googleButton.layer.shadowOffset = CGSize(width:3, height:3)
+        googleButton.layer.shadowOpacity = 3
+        googleButton.layer.shadowRadius = 3
+        googleButton.layer.borderColor = UIColor.black.cgColor
+        googleButton.addTarget(self, action: #selector(didTapButtonGoogle), for: .touchUpInside)
+        return googleButton
+    }()
+
+    private var loginObserve : NSObjectProtocol?
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
@@ -135,18 +161,88 @@ class LoginViewController: UIViewController {
         let gesture = UITapGestureRecognizer(target: self,
                                              action: #selector(didTapChangeProfilePic))
         logoImageView.addGestureRecognizer(gesture)
+        facebokButton.delegate = self
+        _ = NotificationCenter.default.addObserver(forName: .didLogInNotification,
+                                                   object: nil,
+                                                   queue: .main,
+                                                   using: { [weak self] _ in
+                                                    guard let strongSelf = self else {
+                                                        return
+                                                    }
+                                                    strongSelf.navigationController?.dismiss(animated: true, completion: nil)
+                                                   })
         
-       
-         
 
     }
-     
+    deinit {
+        if loginObserve != nil {
+            NotificationCenter.default.removeObserver(loginObserve!)
+        }
+    }
     @objc func didTapRegisterButton(){
         let vc = RegisterViewController()
         vc.title = "Create Account"
         navigationController?.pushViewController(vc, animated: true)
     }
-    
+    //MARK: didTapButtonGoogle
+    @objc func didTapButtonGoogle (){ 
+        guard let clientID = FirebaseApp.app()?.options.clientID else { return }
+
+        // Create Google Sign In configuration object.
+        let config = GIDConfiguration(clientID: clientID)
+        GIDSignIn.sharedInstance.signIn(with: config, presenting: self) { [unowned self] user, error in
+
+          if let error = error {
+            // ...
+            return
+          }
+
+          guard
+            let authentication = user?.authentication,
+            let idToken = authentication.idToken
+          else {
+            return
+          }
+
+          let credential = GoogleAuthProvider.credential(withIDToken: idToken,
+                                                         accessToken: authentication.accessToken)
+            spinner.show(in: view)
+            guard let user = user else {
+                return
+            }
+            
+            print("Did Sign in with user \(user)")
+            guard let email = user.profile?.email,
+                  let firstName = user.profile?.givenName,
+                  let lastName = user.profile?.familyName else {
+                print("Fail to get first, last name and email from goole")
+                return
+            }
+            DispatchQueue.main.async {
+                self.spinner.dismiss()
+            }
+            DatabaseManager.shared.userExists(with: email, completion: { exists in
+                if !exists {
+                    DatabaseManager.shared.insertUser(with: ChatAppUser(firstName: firstName,
+                                                                        lastName: lastName,
+                                                                        mail: email))
+                }
+                
+            })
+            
+            FirebaseAuth.Auth.auth().signIn(with: credential, completion: { authResult, error in
+                guard authResult != nil, error == nil else {
+                    print("failed to log in with google credential")
+                    return
+                }
+                print("Successfully sign in with google cred.")
+                NotificationCenter.default.post(name: .didLogInNotification, object: nil)
+                
+            })
+
+        }
+    }
+    //MARK: didTapLoginButton
     @objc private func didTapLoginButton(){
         mailTextField.resignFirstResponder()
         passwordTextField.resignFirstResponder()
@@ -156,12 +252,17 @@ class LoginViewController: UIViewController {
             return
         }
         
+        spinner.show(in: view)
+        
         //Log in firebase
         FirebaseAuth.Auth.auth().signIn(withEmail: mail, password: password, completion: {
            [weak self] authResult, error in
             guard let strongSelf = self else {
                  
                 return
+            }
+            DispatchQueue.main.async {
+                self!.spinner.dismiss()
             }
             guard let result = authResult, error == nil else {
                 let alert = UIAlertController(title: "Woops",
@@ -182,9 +283,11 @@ class LoginViewController: UIViewController {
         })
 
     }
-    @objc private func didTapButtonGoogle(){
+    
+    @objc private func didTapButtonFB(){
         
     }
+    
     @objc private func didTapChangeProfilePic(){
         print("tap")
     }
@@ -206,6 +309,7 @@ class LoginViewController: UIViewController {
                                                             target: self,
                                                             action: #selector(didTapRegisterButton))
     }
+    
     func setUpView(){
         view.addSubview(logoImageView)
         view.addSubview(containerView)
@@ -213,8 +317,10 @@ class LoginViewController: UIViewController {
         containerView.addSubview(passwordTextField)
         view.addSubview(loginButton)
         view.addSubview(facebokButton)
+        view.addSubview(googleButton)
          
     }
+    
     func setUpConstraints(){
          
         //MARK:- imageLoginCenter
@@ -251,6 +357,11 @@ class LoginViewController: UIViewController {
         facebokButton.topAnchor.constraint(equalTo: loginButton.bottomAnchor, constant: 10).isActive = true
         facebokButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 30).isActive = true
         facebokButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20).isActive = true
+        
+        //MARK:- googleButton
+        googleButton.topAnchor.constraint(equalTo: facebokButton.bottomAnchor, constant: 10).isActive = true
+        googleButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 30).isActive = true
+        googleButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20).isActive = true
     }
 }
 extension LoginViewController : UITextFieldDelegate {
@@ -263,4 +374,70 @@ extension LoginViewController : UITextFieldDelegate {
         }
         return true
     }
+}
+
+extension LoginViewController: LoginButtonDelegate{
+    func loginButtonDidLogOut(_ loginButton: FBLoginButton) {
+    
+    }
+    
+    func loginButton(_ loginButton: FBLoginButton, didCompleteWith result: LoginManagerLoginResult?, error: Error?) {
+        guard let token = result?.token?.tokenString else {
+            print("user to fail login with facebook")
+            return
+        }
+        
+        spinner.show(in: view)
+        let facebokRequest = FBSDKLoginKit.GraphRequest.init(graphPath: "me",
+                                                             parameters: ["fields":"email,name"],
+                                                             tokenString: token,
+                                                             version: nil,
+                                                             httpMethod: .get)
+        facebokRequest.start(completionHandler: { _, result, error in
+            guard let result = result as? [String:Any], error == nil else {
+                print("error to get result from graphRequest")
+                return
+            }
+            DispatchQueue.main.async {
+                self.spinner.dismiss()
+            }
+            print("\(result)")
+            guard let userName = result["name"] as? String, let userMail = result["email"] as? String else {
+                return
+            }
+             
+            let nameComponents = userName.components(separatedBy: " ")
+            guard nameComponents.count == 2 else {
+                return
+            }
+            let firstName = nameComponents[0]
+            let lastName = nameComponents[1]
+            
+            DatabaseManager.shared.userExists(with: userMail, completion:{ exits in
+                if !exits {
+                    DatabaseManager.shared.insertUser(with: ChatAppUser(firstName: firstName, lastName: lastName, mail: userMail))
+                }
+                
+            })
+        })
+        
+        
+         
+        
+        let credential = FacebookAuthProvider.credential(withAccessToken: token)
+
+        FirebaseAuth.Auth.auth().signIn(with: credential, completion: { [weak self] authResult, error in
+            guard let strongSelf = self else {
+                return
+            }
+            guard authResult != nil, error == nil else {
+                if let error = error {
+                    print("Facebook credential login failed ")
+                }
+                return
+            }
+            print("Successfully logged user in")
+            strongSelf.navigationController?.dismiss(animated: true, completion: nil)
+        })
+     }
 }
