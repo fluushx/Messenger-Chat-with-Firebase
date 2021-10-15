@@ -210,7 +210,7 @@ extension DatabaseManager {
                         completion(false)
                         return
                     }
-                  
+                    self?.createNewConversation(with: conversationId, firstMessage: firstMessage, completion: completion)
                     self?.finishCreatingConversation(conversationID: conversationId, firstMessage: firstMessage, complation: completion)
                     
                 })
@@ -260,7 +260,7 @@ extension DatabaseManager {
         let collectionMessage: [String:Any] = [
             "id": firstMessage.messageId,
             "type":firstMessage.kind.messageKindString,
-            "content": message ,
+            "content": message,
             "date": dateString,
             "sender_email": currentUserEmail,
             "is_Read": false
