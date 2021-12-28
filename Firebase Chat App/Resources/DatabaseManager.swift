@@ -283,13 +283,13 @@ extension DatabaseManager {
         })
     }
     //Fetch and return all conversations for the user with pass and email
-    public func getAllConversation(for email:String, completion: @escaping (Result<[Conversation],Error>)->Void){
-        database.child("\(email)/conversations").observe(.value, with: {snapshot in
+    public func getAllConversations(for email:String, completion: @escaping (Result<[Conversation],Error>)->Void){
+        database.child("\(email)/conversations").observe(.value, with: { snapshot in
             guard let value = snapshot.value as? [[String:Any]] else {
                 completion(.failure(DataseError.failedToFetch))
                 return
             }
-            let conversations_: [Conversation] = value.compactMap({ dictionary in
+            let conversations: [Conversation] = value.compactMap({ dictionary in
                 guard let conversationId = dictionary["id"] as? String,
                     let name = dictionary["name"] as? String,
                     let otherUserEmail = dictionary["other_user_email"] as? String,
@@ -299,12 +299,10 @@ extension DatabaseManager {
                     let isRead = latestMessage["is_read"] as? Bool else {
                         return nil
                 }
-                
-                
+ 
                 let latestMmessageObject = LastedMessage(date: date,
                                                          text: message,
                                                          isRead: isRead)
-                print(latestMmessageObject)
                 
                 return Conversation(id: conversationId,
                                     name: name,
@@ -312,14 +310,9 @@ extension DatabaseManager {
                                     lastedMessage: latestMmessageObject)
             })
 
-            completion(.success(conversations_))
-            print("\(completion(.success(conversations_)))")
-           
-             
-            
-         })
-        
-    }
+                       completion(.success(conversations))
+                   })
+     }
     //Get all message for a given converstions
     public func getAllMessagesForConversations(with id:String, completion: @escaping (Result<String,Error>)->Void){
         

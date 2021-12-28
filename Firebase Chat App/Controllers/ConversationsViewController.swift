@@ -71,6 +71,7 @@ class ConversationsViewController: UIViewController {
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         setUpTableView()
+        
     }
     
     private func validateAuth(){
@@ -100,7 +101,7 @@ class ConversationsViewController: UIViewController {
         }
         print("starting to fetch conversations")
         let safeEmail = DatabaseManager.safeEmail(emailAddress: email)
-        DatabaseManager.shared.getAllConversation(for: safeEmail, completion: { [weak self] result in
+        DatabaseManager.shared.getAllConversations(for: safeEmail, completion: { [weak self] result in
             switch result {
             case .success(let conversations_):
                 print("successfully got conversation models")
@@ -109,13 +110,11 @@ class ConversationsViewController: UIViewController {
            
                     return
                 }
-             
-                
+                             
                 self?.conversations = conversations_
-                print(self?.conversations as Any)
 
                 DispatchQueue.main.async {
-                    self!.tableView.reloadData()
+                    self?.tableView.reloadData()
                 }
             case .failure(let error):
                  
