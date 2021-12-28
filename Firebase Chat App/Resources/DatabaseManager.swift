@@ -132,7 +132,7 @@ extension Notification.Name {
 extension DatabaseManager {
     
     //Create a new conversation with target user email and first message send
-    public func createNewConversation (with otherUserEmail : String, firstMessage: Message, completion: @escaping (Bool)->Void){
+    public func createNewConversation (with otherUserEmail : String, name:String, firstMessage: Message, completion: @escaping (Bool)->Void){
         guard let currentEmail = UserDefaults.standard.value(forKey: "email") as? String else {
             return
         }
@@ -176,6 +176,7 @@ extension DatabaseManager {
             let newConversation : [String :Any ] = [
                 
                 "id" : conversationId,
+                "name":name,
                 "other_user_email": otherUserEmail,
                 "lasted_message": [
                     "date": dateString,
@@ -197,7 +198,7 @@ extension DatabaseManager {
                         completion(false)
                         return
                     }
-                    self.createNewConversation(with: conversationId, firstMessage: firstMessage, completion: completion)
+                    self.finishCreatingConversation(name: name,conversationID: conversationId, firstMessage: firstMessage, complation: completion)
                     
                 })
             } else {
@@ -210,8 +211,8 @@ extension DatabaseManager {
                         completion(false)
                         return
                     }
-                    self?.createNewConversation(with: conversationId, firstMessage: firstMessage, completion: completion)
-                    self?.finishCreatingConversation(conversationID: conversationId, firstMessage: firstMessage, complation: completion)
+                   
+                    self?.finishCreatingConversation(name: name,conversationID: conversationId, firstMessage: firstMessage, complation: completion)
                     
                 })
             }
@@ -220,7 +221,7 @@ extension DatabaseManager {
         
     }
     
-    private func finishCreatingConversation(conversationID: String,firstMessage: Message, complation: @escaping (Bool)->Void){
+    private func finishCreatingConversation(name:String, conversationID: String,firstMessage: Message, complation: @escaping (Bool)->Void){
         
         var message = ""
         
@@ -263,7 +264,8 @@ extension DatabaseManager {
             "content": message,
             "date": dateString,
             "sender_email": currentUserEmail,
-            "is_Read": false
+            "is_Read": false,
+            "name":name
         ]
         
         let value: [String:Any] = [
@@ -281,8 +283,41 @@ extension DatabaseManager {
         })
     }
     //Fetch and return all conversations for the user with pass and email
-    public func getAllConversation(for email:String, completion: @escaping (Result<String,Error>)->Void){
-        
+    public func getAllConversation(for email:String, completion: @escaping (Result<[Conversation],Error>)->Void){
+        database.child("\(email)/conversations").observe(.value, with: {snapshot in
+            guard let value = snapshot.value as? [[String:Any]] else {
+                completion(.failure(DataseError.failedToFetch))
+                return
+            }
+            let conversations_: [Conversation] = value.compactMap({ dictionary in
+                guard let conversationId = dictionary["id"] as? String,
+                    let name = dictionary["name"] as? String,
+                    let otherUserEmail = dictionary["other_user_email"] as? String,
+                    let latestMessage = dictionary["lasted_message"] as? [String: Any],
+                    let date = latestMessage["date"] as? String,
+                    let message = latestMessage["message"] as? String,
+                    let isRead = latestMessage["is_read"] as? Bool else {
+                        return nil
+                }
+                
+                
+                let latestMmessageObject = LastedMessage(date: date,
+                                                         text: message,
+                                                         isRead: isRead)
+                print(latestMmessageObject)
+                
+                return Conversation(id: conversationId,
+                                    name: name,
+                                    otherUserEmail: otherUserEmail,
+                                    lastedMessage: latestMmessageObject)
+            })
+
+            completion(.success(conversations_))
+            print("\(completion(.success(conversations_)))")
+           
+             
+            
+         })
         
     }
     //Get all message for a given converstions

@@ -57,8 +57,11 @@ class ProfileViewController: UIViewController,UITableViewDelegate,UITableViewDat
         }()
         
         headerView.addSubview(imageView)
+//        guard let email = UserDefaults.standard.value(forKey: "email") as? String else {
+//            return headerView
+//                }
         
-        let email = UserDefaults.standard.value(forKey: "email") as? String
+         let email = UserDefaults.standard.value(forKey: "email") as? String
         let safeEmail = DatabaseManager.safeEmail(emailAddress: email!)
         let fileName = safeEmail + "_profile_picture.png"
         let path = "images"+fileName
